@@ -19,19 +19,33 @@ def clean_zipcode(zipcode)
 	zipcode.to_s.rjust(5,"0")[0..4]
 end
 
-puts "EventManager Initialized!"
-#using Ruby's CSV Library
-contents = CSV.open "event_attendees.csv", headers: true, header_converters: :symbol
-contents.each do |row|
-	name = row[:first_name]
-	zipcode = clean_zipcode(row[:zipcode])
+def legislators_by_zipcode(zipcode)
 	legislators = Sunlight::Congress::Legislator.by_zipcode(zipcode)
-	
+
 	legislator_names = legislators.collect do |legislator|
 		"#{legislator.first_name} #{legislator.last_name}"
 		end
-		lesgislators_string = legislator_names.join(",")		
-	puts "#{name} #{zipcode} #{lesgislators_string}"
+
+	legislator_names.join(",")
+end
+
+puts "EventManager Initialized!"
+#using Ruby's CSV Library
+contents = CSV.open "event_attendees.csv", headers: true, header_converters: :symbol
+
+template_letter = File.read "form_letter.html"
+
+contents.each do |row|
+	name = row[:first_name]
+	zipcode = clean_zipcode(row[:zipcode])
+
+		legislators = legislators_by_zipcode(zipcode).join(",")
+		#creates a template for each person
+		personal_letter = template_letter.gsub('FIRST_NAME', name)
+		personal_letter.gsub!('LEGISLATORS', legislators)
+		puts personal_letter
+	puts "#{name} #{zipcode} #{lesgislators}"
+
 
 
 end
@@ -43,3 +57,5 @@ end
 #	columns = line.split(",")
 	#accessing the first name column.
 #	name = clomuns[2]
+
+# %{String Content} is one way of storing strings with multiple lines.
